@@ -41,13 +41,22 @@ const DIRS = {
   left: { x: -1, y: 0 },
 };
 const OWNERS = {
-  0: { fill: '#192832', edge: '#263943' },
-  1: { fill: '#43bd82', edge: '#a7f2c0' },
-  2: { fill: '#fa7476', edge: '#ffb0a2' },
-  3: { fill: '#eab45e', edge: '#ffdb8f' },
+  0: { fill: '#172923', edge: '#263b31' },
+  1: { fill: '#54ca8b', shade: '#2c9364', edge: '#bdffd2' },
+  2: { fill: '#ff817b', shade: '#d85a62', edge: '#ffd0ba' },
+  3: { fill: '#f5c66f', shade: '#da973a', edge: '#fff0b5' },
 };
 const BEST_KEY = 'territory-trail-best-v1';
 const LEADERBOARD_KEY = 'territory-trail-scores-v1';
+const ACTOR_SPRITES = new Map();
+
+for (const [owner, path] of [[1, './assets/runner-you.svg'], [2, './assets/rook.svg'], [3, './assets/kit.svg']]) {
+  const sprite = new Image();
+  sprite.decoding = 'async';
+  sprite.addEventListener('load', draw);
+  sprite.src = new URL(path, import.meta.url).href;
+  ACTOR_SPRITES.set(owner, sprite);
+}
 
 function readLocalScores() {
   try {
@@ -369,29 +378,38 @@ function roundedRect(x, y, width, height, radius) {
 function drawActor(actor, cellW, cellH, isPlayer) {
   const centerX = (actor.x + 0.5) * cellW;
   const centerY = (actor.y + 0.5) * cellH;
-  const radius = Math.min(cellW, cellH) * 0.34;
+  const size = Math.min(cellW, cellH) * (isPlayer ? 1.46 : 1.38);
+  const sprite = ACTOR_SPRITES.get(actor.owner);
+  const rotations = { up: 0, right: Math.PI / 2, down: Math.PI, left: -Math.PI / 2 };
   ctx.save();
-  ctx.fillStyle = isPlayer ? '#f3fff5' : '#fff8ef';
-  ctx.strokeStyle = OWNERS[actor.owner].edge;
-  ctx.lineWidth = Math.max(1.5, Math.min(cellW, cellH) * 0.1);
+  ctx.translate(centerX, centerY);
+  ctx.rotate(rotations[actor.dir] || 0);
   ctx.shadowColor = OWNERS[actor.owner].fill;
-  ctx.shadowBlur = isPlayer ? 12 : 7;
+  ctx.shadowBlur = isPlayer ? 16 : 11;
   ctx.beginPath();
-  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.arc(0, 0, size * 0.41, 0, Math.PI * 2);
+  ctx.fillStyle = `${OWNERS[actor.owner].fill}66`;
   ctx.fill();
-  ctx.stroke();
   ctx.shadowBlur = 0;
-  ctx.fillStyle = OWNERS[actor.owner].fill;
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, radius * 0.38, 0, Math.PI * 2);
-  ctx.fill();
-  const direction = DIRS[actor.dir];
-  const tipX = centerX + direction.x * radius * 1.45;
-  const tipY = centerY + direction.y * radius * 1.45;
-  ctx.fillStyle = '#f3fff5';
-  ctx.beginPath();
-  ctx.arc(tipX, tipY, Math.max(1.1, radius * 0.16), 0, Math.PI * 2);
-  ctx.fill();
+  if (sprite?.complete && sprite.naturalWidth > 0) {
+    ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
+  } else {
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.34, 0, Math.PI * 2);
+    ctx.fillStyle = '#f3fff5';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.22, 0, Math.PI * 2);
+    ctx.fillStyle = OWNERS[actor.owner].fill;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.48);
+    ctx.lineTo(-size * 0.12, -size * 0.27);
+    ctx.lineTo(size * 0.12, -size * 0.27);
+    ctx.closePath();
+    ctx.fillStyle = '#f3fff5';
+    ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -399,28 +417,46 @@ function draw() {
   if (!ctx || !state.board || !state.width || !state.height) return;
   const ratio = state.dpr;
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.clearRect(0, 0, state.width, state.height);
   const backdrop = ctx.createLinearGradient(0, 0, state.width, state.height);
-  backdrop.addColorStop(0, '#14232c');
-  backdrop.addColorStop(1, '#101b23');
+  backdrop.addColorStop(0, '#18332a');
+  backdrop.addColorStop(.55, '#10251e');
+  backdrop.addColorStop(1, '#0c1b17');
   ctx.fillStyle = backdrop;
   ctx.fillRect(0, 0, state.width, state.height);
   const cellW = state.width / COLS;
   const cellH = state.height / ROWS;
-  const gap = Math.max(0.75, Math.min(cellW, cellH) * 0.075);
+  const gap = Math.max(0.5, Math.min(cellW, cellH) * 0.035);
+  const territoryFills = new Map();
+  for (const owner of [1, 2, 3]) {
+    const fill = ctx.createLinearGradient(0, 0, state.width, state.height);
+    fill.addColorStop(0, OWNERS[owner].fill);
+    fill.addColorStop(1, OWNERS[owner].shade);
+    territoryFills.set(owner, fill);
+  }
   for (let y = 0; y < ROWS; y += 1) {
     for (let x = 0; x < COLS; x += 1) {
       const index = cellIndex(state.board, x, y);
       const owner = state.board.cells[index];
-      const palette = OWNERS[owner];
-      ctx.fillStyle = owner === 0 && (x + y) % 2 === 0 ? '#1b2b34' : palette.fill;
-      roundedRect(x * cellW + gap / 2, y * cellH + gap / 2, cellW - gap, cellH - gap, Math.min(cellW, cellH) * 0.16);
-      if (owner !== 0 && ((x * 3 + y) % 9 === 0)) {
-        ctx.fillStyle = 'rgba(255,255,255,.11)';
-        roundedRect(x * cellW + cellW * 0.2, y * cellH + cellH * 0.19, cellW * 0.16, cellH * 0.16, 2);
+      if (owner === 0) {
+        ctx.fillStyle = (x + y) % 2 === 0 ? '#172a23' : '#14261f';
+        roundedRect(x * cellW + gap / 2, y * cellH + gap / 2, cellW - gap, cellH - gap, Math.min(cellW, cellH) * 0.1);
+      } else {
+        ctx.fillStyle = territoryFills.get(owner) || OWNERS[owner].fill;
+        ctx.fillRect(x * cellW, y * cellH, cellW + .25, cellH + .25);
       }
     }
   }
+  const vignette = ctx.createRadialGradient(state.width * .5, state.height * .48, state.height * .2, state.width * .5, state.height * .5, state.width * .75);
+  vignette.addColorStop(0, 'rgba(0,0,0,0)');
+  vignette.addColorStop(1, 'rgba(3,10,7,.24)');
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, state.width, state.height);
+  ctx.strokeStyle = 'rgba(221,255,232,.18)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(.5, .5, state.width - 1, state.height - 1);
   for (const actor of [...state.bots, state.player]) {
     if (!actor.trail.length) continue;
     ctx.save();
@@ -455,7 +491,7 @@ function frame(now) {
 function resizeCanvas() {
   const rect = canvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
-  state.dpr = Math.min(window.devicePixelRatio || 1, 2);
+  state.dpr = Math.min(window.devicePixelRatio || 1, 3);
   state.width = rect.width;
   state.height = rect.height;
   canvas.width = Math.round(rect.width * state.dpr);

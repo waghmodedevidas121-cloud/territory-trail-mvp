@@ -20,4 +20,7 @@ test('static page asset URLs remain relative for GitHub Pages repository subpath
   assert.match(serviceWorker, /new URL\('\.\/', self\.location\.href\)/);
   assert.match(app, /localStorage\.setItem\(LEADERBOARD_KEY/);
   assert.doesNotMatch(app, /fetch\(['"]\/api\//);
+  assert.match(serviceWorker, /assets\/runner-you\.svg/);
+  assert.match(serviceWorker, /assets\/rook\.svg/);
+  assert.match(serviceWorker, /assets\/kit\.svg/);
 });

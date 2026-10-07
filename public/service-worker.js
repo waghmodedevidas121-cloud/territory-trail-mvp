@@ -1,7 +1,8 @@
-const CACHE_NAME = 'territory-trail-shell-v4';
+const CACHE_NAME = 'territory-trail-shell-v5';
 const BASE_URL = new URL('./', self.location.href);
 const SHELL = [
   '', 'index.html', 'styles.css', 'app.js', 'game-engine.js',
+  'assets/runner-you.svg', 'assets/rook.svg', 'assets/kit.svg',
   'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png',
 ].map((file) => new URL(file, BASE_URL).href);
 
