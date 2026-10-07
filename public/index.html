@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b1118">
+    <meta name="description" content="Claim the grid, cut rival trails, and own the arena in this quick territory arcade game.">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./styles.css">
+    <title>Territory Trail — Claim the Arena</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+          <a class="brand" href="./" aria-label="Territory Trail home">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span class="brand-name">TERRITORY<span class="brand-slash">/</span>TRAIL</span>
+        </a>
+        <div class="top-actions">
+          <button id="leaderboard-open" class="quiet-button" type="button">Leaderboard <span aria-hidden="true">↗</span></button>
+          <button id="restart-button" class="icon-button" type="button" aria-label="Restart round" title="Restart round (R)">↻</button>
+        </div>
+      </header>
+
+      <section class="game-intro" aria-labelledby="game-title">
+        <div class="intro-heading">
+          <p class="eyebrow"><span class="live-dot"></span> SOLO ARENA <span class="eyebrow-divider">/</span> 3 RUNNERS</p>
+          <h1 id="game-title">Make the <em>map</em> yours.</h1>
+        </div>
+        <div class="intro-aside">
+          <p>Draw a line beyond your color, loop back to your land, and take the space inside. Rival trails are fair game—your own trail isn't.</p>
+          <span class="goal-chip"><span class="goal-spark" aria-hidden="true">✳</span> Claim 50% to win</span>
+        </div>
+      </section>
+
+      <section class="game-layout" aria-label="Territory Trail game">
+        <div class="board-column">
+          <div class="board-frame">
+            <div class="board-topline">
+              <span class="field-label"><span class="live-dot"></span> THE GRID <span class="round-pill" id="round-pill">READY</span></span>
+              <span class="key-hint">SWIPE · WASD · ARROW KEYS</span>
+            </div>
+            <div class="canvas-wrap">
+              <canvas id="game-canvas" aria-label="Game board. Swipe to steer your runner, or use the direction controls." role="img"></canvas>
+              <div id="start-overlay" class="field-overlay">
+                <div class="overlay-card start-card">
+                  <span class="start-emblem" aria-hidden="true">↗</span>
+                  <p class="eyebrow">YOUR CORNER. YOUR MOVE.</p>
+                  <h2>Claim the open field.</h2>
+                  <p>Leave your turf, draw a loop, then return to close it. Don't let a rival touch your open trail.</p>
+                  <button id="start-button" class="primary-button start-button" type="button">Start run <span aria-hidden="true">→</span></button>
+                  <span class="start-hint">or choose a direction to begin</span>
+                </div>
+              </div>
+              <div id="pause-overlay" class="pause-overlay hidden" role="status" aria-live="polite">
+                <div class="pause-card"><span class="pause-icon" aria-hidden="true">Ⅱ</span><strong>PAUSED</strong><span>Press Space or Resume to continue</span></div>
+              </div>
+              <div id="round-overlay" class="round-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="round-title">
+                <div class="overlay-card result-card">
+                  <p id="round-kicker" class="eyebrow">RUN ENDED</p>
+                  <h2 id="round-title">Your trail got crossed.</h2>
+                  <p id="round-result" class="round-result"></p>
+                  <label class="name-label" for="player-name">Name for the leaderboard</label>
+                  <input id="player-name" maxlength="18" autocomplete="nickname" value="Trailblazer" aria-label="Name for leaderboard">
+                  <div class="overlay-actions">
+                    <button id="save-score" class="primary-button" type="button">Save score</button>
+                    <button id="play-again" class="secondary-button" type="button">Play again</button>
+                  </div>
+                  <p id="save-feedback" class="save-feedback" role="status" aria-live="polite"></p>
+                </div>
+              </div>
+              <div id="leaderboard-panel" class="leaderboard-panel hidden" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title">
+                <div class="leaderboard-heading">
+                  <div><p class="eyebrow">LOCAL HIGH SCORES</p><h2 id="leaderboard-title">Best runs</h2></div>
+                  <button id="leaderboard-close" class="icon-button small" type="button" aria-label="Close leaderboard">×</button>
+                </div>
+                <ol id="leaderboard-list" class="leaderboard-list"><li class="leaderboard-empty">Loading scores…</li></ol>
+                <p class="leaderboard-note">Scores are saved in this browser.</p>
+              </div>
+            </div>
+            <div class="board-footer">
+              <span><i class="legend-swatch you"></i> You</span>
+              <span><i class="legend-swatch rival"></i> Rook</span>
+              <span><i class="legend-swatch amber"></i> Kit</span>
+              <span><i class="legend-swatch trail"></i> Open trail</span>
+              <span id="game-status" class="game-status" aria-live="polite">Choose a direction to begin.</span>
+            </div>
+          </div>
+
+          <div class="mobile-controls" aria-label="Touch direction controls">
+            <div class="dpad" role="group" aria-label="Steer your runner">
+              <button data-direction="up" class="direction up" aria-label="Move up" type="button">↑</button>
+              <button data-direction="left" class="direction left" aria-label="Move left" type="button">←</button>
+              <button data-direction="down" class="direction down" aria-label="Move down" type="button">↓</button>
+              <button data-direction="right" class="direction right" aria-label="Move right" type="button">→</button>
+            </div>
+            <button id="pause-button" class="pause-button" type="button">Pause</button>
+          </div>
+          <p class="mobile-tip">Swipe across the field or tap a direction. Close your loop back on your mint land.</p>
+        </div>
+
+        <aside class="sidebar" aria-label="Round stats and tips">
+          <div class="stats-card">
+            <div class="card-heading"><span>YOUR RUN</span><span class="card-icon" aria-hidden="true">✳</span></div>
+            <div class="score-label">SCORE</div>
+            <div id="score-value" class="score-value" aria-live="polite">00000</div>
+            <div class="progress-label"><span>FIELD CLAIMED</span><strong id="territory-value">2%</strong></div>
+            <div class="progress-track" role="progressbar" aria-label="Field claimed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="2"><div id="territory-progress" class="progress-fill"></div></div>
+            <div class="target-note"><span>Domination target</span><strong>50%</strong></div>
+            <div class="stat-row"><span>Cells claimed</span><strong id="captures-value">0</strong></div>
+            <div class="stat-row"><span>Total land owned</span><strong id="cells-value">16</strong></div>
+            <div class="stat-row"><span>Rivals eliminated</span><strong id="eliminations-value">0</strong></div>
+            <div class="stat-row best-row"><span>Personal best</span><strong id="best-value">0</strong></div>
+          </div>
+
+          <div class="rivals-card">
+            <div class="card-heading"><span>RIVALS IN THE FIELD</span><span class="rival-count">02</span></div>
+            <div class="rival-line"><span class="rival-avatar coral" aria-hidden="true">R</span><span class="rival-name"><strong>Rook</strong><small>Quick &amp; restless</small></span><span id="rook-value" class="rival-share">2%</span></div>
+            <div class="rival-line"><span class="rival-avatar amber" aria-hidden="true">K</span><span class="rival-name"><strong>Kit</strong><small>Patient &amp; bold</small></span><span id="kit-value" class="rival-share">2%</span></div>
+          </div>
+
+          <div class="tip-card">
+            <span class="tip-number">01 <i></i> CLAIM</span>
+            <p>Draw outside your color, close the loop on your land. Everything sealed inside becomes yours.</p>
+            <div class="tip-rule"></div>
+            <span class="tip-number risk-number">02 <i></i> SURVIVE</span>
+            <p>Your exposed line is vulnerable. Clip a rival's trail for a <strong>+100 point bounty.</strong></p>
+          </div>
+          <p class="build-note"><span class="live-dot"></span> Solo arcade · score saved locally</p>
+        </aside>
+      </section>
+
+      <footer class="footer"><span>Territory Trail <span class="footer-dot">·</span> Solo arcade arena</span><span>Make a loop. Make it yours.</span></footer>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

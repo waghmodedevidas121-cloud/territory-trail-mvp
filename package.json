@@ -1,0 +1,14 @@
+{
+  "name": "territory-trail-mvp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "An original Android-friendly territory-capture game with a persistent local leaderboard.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
